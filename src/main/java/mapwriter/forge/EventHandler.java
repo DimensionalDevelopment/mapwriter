@@ -2,6 +2,7 @@ package mapwriter.forge;
 
 import java.util.ArrayList;
 
+import net.minecraft.world.chunk.Chunk;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
 import com.mojang.realmsclient.RealmsMainScreen;
@@ -27,9 +28,9 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.dimdev.rift.listener.ChunkEventListener;
 
-public class EventHandler
-{
+public class EventHandler implements ChunkEventListener {
 	Mw mw;
 
 	public EventHandler(Mw mw)
@@ -190,6 +191,23 @@ public class EventHandler
 		if (Mw.getInstance().ready)
 		{
 			Mw.getInstance().markerManager.drawMarkersWorld(event.getPartialTicks());
+		}
+	}
+
+	@Override
+	public void onChunkLoad(Chunk chunk) {
+		if (chunk.getWorld().isRemote)
+		{
+			this.mw.onChunkLoad(chunk);
+		}
+
+	}
+
+	@Override
+	public void onChunkUnload(Chunk chunk) {
+		if (chunk.getWorld().isRemote)
+		{
+			this.mw.onChunkUnload(chunk);
 		}
 	}
 }

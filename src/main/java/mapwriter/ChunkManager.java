@@ -13,8 +13,9 @@ import mapwriter.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraft.world.chunk.ChunkSection;
 
 public class ChunkManager
 {
@@ -29,9 +30,8 @@ public class ChunkManager
 	{
 		Map<BlockPos, TileEntity> TileEntityMap = Maps.newHashMap();
 		TileEntityMap = Utils.checkedMapByCopy(chunk.getTileEntityMap(), BlockPos.class, TileEntity.class, false);
-		byte[] biomeArray = Arrays.copyOf(chunk.getBiomeArray(), chunk.getBiomeArray().length);
-		ExtendedBlockStorage[] dataArray =
-				Arrays.copyOf(chunk.getBlockStorageArray(), chunk.getBlockStorageArray().length);
+		Biome[] biomeArray = Arrays.copyOf(chunk.getBiomes(), chunk.getBiomes().length);
+		ChunkSection[] dataArray = Arrays.copyOf(chunk.getBlockStorageArray(), chunk.getBlockStorageArray().length);
 
 		return new MwChunk(
 				chunk.x,
@@ -160,7 +160,7 @@ public class ChunkManager
 		{
 			for (int x = 0; x < 3; x++)
 			{
-				Chunk chunk = this.mw.mc.world.getChunkFromChunkCoords(chunkArrayX + x, chunkArrayZ + z);
+				Chunk chunk = this.mw.mc.world.getChunk(chunkArrayX + x, chunkArrayZ + z);
 				if (!chunk.isEmpty())
 				{
 					chunkArray[z * 3 + x] = copyToMwChunk(chunk);

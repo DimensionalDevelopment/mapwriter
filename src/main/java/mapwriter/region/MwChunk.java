@@ -19,6 +19,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
@@ -95,7 +96,7 @@ public class MwChunk implements IChunk
 		//
 		Boolean flag = true;
 		byte[] biomeArray = null;
-		ExtendedBlockStorage[] data = new ExtendedBlockStorage[16];
+		ChunkSection[] data = new ChunkSection[16];
 		Map<BlockPos, TileEntity> TileEntityMap = new HashMap<BlockPos, TileEntity>();
 
 		DataInputStream dis = null;
@@ -154,11 +155,11 @@ public class MwChunk implements IChunk
 
 				NBTTagList sections = level.getTagList("Sections", 10);
 
-				for (int k = 0; k < sections.tagCount(); ++k)
+				for (int k = 0; k < sections.size(); ++k)
 				{
 					NBTTagCompound section = sections.getCompoundTagAt(k);
 					int y = section.getByte("Y");
-					ExtendedBlockStorage extendedblockstorage = new ExtendedBlockStorage(y << 4, flag);
+					ChunkSection extendedblockstorage = new ChunkSection(y << 4, flag);
 					byte[] abyte = nbttagcompound.getByteArray("Blocks");
 					NibbleArray nibblearray = new NibbleArray(nbttagcompound.getByteArray("Data"));
 					NibbleArray nibblearray1 =
@@ -228,7 +229,7 @@ public class MwChunk implements IChunk
 
 	public final int dimension;
 
-	public ExtendedBlockStorage[] dataArray = new ExtendedBlockStorage[16];
+	public ChunkSection[] dataArray = new ChunkSection[16];
 
 	public final Map<BlockPos, TileEntity> tileentityMap;
 
@@ -239,8 +240,8 @@ public class MwChunk implements IChunk
 	public MwChunk(int x,
 			int z,
 			int dimension,
-			ExtendedBlockStorage[] data,
-			byte[] biomeArray,
+			ChunkSection[] data,
+			Biome[] biomeArray,
 			Map<BlockPos, TileEntity> TileEntityMap)
 	{
 		this.x = x;
@@ -261,19 +262,17 @@ public class MwChunk implements IChunk
 	}
 
 	@Override
-	public int getBiome(int x, int y, int z)
-	{
+	public int getBiome(int x, int y, int z) {
 		int i = x & 15;
 		int j = z & 15;
 		int k = this.biomeArray[j << 4 | i] & 255;
 
 		if (k == 255)
 		{
-			Biome biome =
-					Minecraft.getMinecraft().world.getBiomeProvider().getBiome(new BlockPos(k, k, k), Biomes.PLAINS);
+			Biome biome = Minecraft.getMinecraft().world.getBiome(new BlockPos(k, k, k));
 			k = Biome.getIdForBiome(biome);
 		}
-		;
+
 		return k;
 	}
 
@@ -386,11 +385,11 @@ public class MwChunk implements IChunk
 
 		compound.setInteger("xPos", this.x);
 		compound.setInteger("zPos", this.z);
-		ExtendedBlockStorage[] aextendedblockstorage = this.dataArray;
+		ChunkSection[] aextendedblockstorage = this.dataArray;
 		NBTTagList nbttaglist = new NBTTagList();
 		boolean flag = true;
 
-		for (ExtendedBlockStorage extendedblockstorage : aextendedblockstorage)
+		for (ChunkSection extendedblockstorage : aextendedblockstorage)
 		{
 			if (extendedblockstorage != Chunk.NULL_BLOCK_STORAGE)
 			{

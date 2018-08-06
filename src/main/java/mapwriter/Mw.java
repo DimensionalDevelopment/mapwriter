@@ -98,8 +98,8 @@ public class Mw
 		this.mc = Minecraft.getMinecraft();
 
 		// create base save directory
-		this.saveDir = new File(this.mc.mcDataDir, "saves");
-		this.configDir = new File(this.mc.mcDataDir, "config");
+		this.saveDir = new File(this.mc.gameDir, "saves");
+		this.configDir = new File(this.mc.gameDir, "config");
 
 		this.ready = false;
 
@@ -191,7 +191,7 @@ public class Mw
 		}
 		else
 		{
-			saveDir = DimensionManager.getCurrentSaveRootDirectory();
+			saveDir =Minecraft.getMinecraft().getIntegratedServer().getWorld(0).getWorld().getSaveHandler().getWorldDirectory();
 			this.worldDir = new File(saveDir, "mapwriter");
 		}
 
@@ -638,10 +638,9 @@ public class Mw
 
 		if (this.mc.world != null)
 		{
-			if (!this.mc.world.getChunkFromBlockCoords(new BlockPos(this.playerX, 0, this.playerZ)).isEmpty())
+			if (!this.mc.world.getChunk(new BlockPos(this.playerX, 0, this.playerZ)).isEmpty())
 			{
-				this.playerBiome =
-						this.mc.world.getBiomeForCoordsBody(new BlockPos(this.playerX, 0, this.playerZ)).getBiomeName();
+				this.playerBiome = this.mc.world.getBiome(new BlockPos(this.playerX, 0, this.playerZ)).getDisplayName().getString();
 			}
 		}
 
