@@ -1,15 +1,7 @@
 package mapwriter.region;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 import mapwriter.util.Logging;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.init.Biomes;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -17,11 +9,15 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.NibbleArray;
-import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MwChunk implements IChunk
 {
@@ -160,13 +156,7 @@ public class MwChunk implements IChunk
 					NBTTagCompound section = sections.getCompoundTagAt(k);
 					int y = section.getByte("Y");
 					ChunkSection extendedblockstorage = new ChunkSection(y << 4, flag);
-					byte[] abyte = nbttagcompound.getByteArray("Blocks");
-					NibbleArray nibblearray = new NibbleArray(nbttagcompound.getByteArray("Data"));
-					NibbleArray nibblearray1 =
-							nbttagcompound.hasKey("Add", 7) ?
-									new NibbleArray(nbttagcompound.getByteArray("Add")) :
-									null;
-					extendedblockstorage.getData().setDataFromNBT(abyte, nibblearray, nibblearray1);
+					extendedblockstorage.getData().readBlockStates(section,  "Palette", "BlockStates");
 					extendedblockstorage.setBlockLight(new NibbleArray(nbttagcompound.getByteArray("BlockLight")));
 
 					if (flag)
@@ -184,10 +174,10 @@ public class MwChunk implements IChunk
 
 				if (nbttaglist2 != null)
 				{
-					for (int i1 = 0; i1 < nbttaglist2.tagCount(); ++i1)
+					for (int i1 = 0; i1 < nbttaglist2.size(); ++i1)
 					{
 						NBTTagCompound nbttagcompound4 = nbttaglist2.getCompoundTagAt(i1);
-						TileEntity tileentity = TileEntity.create(null, nbttagcompound4);
+						TileEntity tileentity = TileEntity.fromNBT(nbttagcompound4);
 						if (tileentity != null)
 						{
 							TileEntityMap.put(tileentity.getPos(), tileentity);
@@ -241,7 +231,7 @@ public class MwChunk implements IChunk
 			int z,
 			int dimension,
 			ChunkSection[] data,
-			Biome[] biomeArray,
+			byte[] biomeArray,
 			Map<BlockPos, TileEntity> TileEntityMap)
 	{
 		this.x = x;
@@ -265,15 +255,8 @@ public class MwChunk implements IChunk
 	public int getBiome(int x, int y, int z) {
 		int i = x & 15;
 		int j = z & 15;
-		int k = this.biomeArray[j << 4 | i] & 255;
 
-		if (k == 255)
-		{
-			Biome biome = Minecraft.getMinecraft().world.getBiome(new BlockPos(k, k, k));
-			k = Biome.getIdForBiome(biome);
-		}
-
-		return k;
+		return this.biomeArray[j << 4 | i] & 255;
 	}
 
 	@Override
@@ -395,16 +378,7 @@ public class MwChunk implements IChunk
 			{
 				NBTTagCompound nbttagcompound = new NBTTagCompound();
 				nbttagcompound.setByte("Y", (byte) (extendedblockstorage.getYLocation() >> 4 & 255));
-				byte[] abyte = new byte[4096];
-				NibbleArray nibblearray = new NibbleArray();
-				NibbleArray nibblearray1 = extendedblockstorage.getData().getDataForNBT(abyte, nibblearray);
-				nbttagcompound.setByteArray("Blocks", abyte);
-				nbttagcompound.setByteArray("Data", nibblearray.getData());
-
-				if (nibblearray1 != null)
-				{
-					nbttagcompound.setByteArray("Add", nibblearray1.getData());
-				}
+				extendedblockstorage.getData().func_196963_b(nbttagcompound,  "Palette", "BlockStates");
 
 				nbttagcompound.setByteArray("BlockLight", extendedblockstorage.getBlockLight().getData());
 
@@ -418,7 +392,7 @@ public class MwChunk implements IChunk
 							.setByteArray("SkyLight", new byte[extendedblockstorage.getBlockLight().getData().length]);
 				}
 
-				nbttaglist.appendTag(nbttagcompound);
+				nbttaglist.add(nbttagcompound);
 			}
 		}
 
@@ -432,7 +406,7 @@ public class MwChunk implements IChunk
 			try
 			{
 				NBTTagCompound nbttagcompound3 = tileentity.writeToNBT(new NBTTagCompound());
-				nbttaglist2.appendTag(nbttagcompound3);
+				nbttaglist2.add(nbttagcompound3);
 			}
 			catch (Exception e)
 			{
